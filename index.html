@@ -24,8 +24,269 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+          Things to improve on REST APIs
+          <hr/>
+          <footer>João Cabrita</footer>
+        </section>
+
+        <section>
+          <h1>About Me:</h1>
+          <ul>
+            <li>Long(ish) time software dev consultant</li>
+            <li>RESTafarian</li>
+            <li>Fitness junky</li>
+            <li><code>@joaorcabrita</code></li>
+          </ul>
+        </section>
+
+        <section>
+          Why REST?
+          <aside class="notes">
+            <p>If you're already here, you're probably already sold on this, but...</p>
+            <p>REST is an architectural style that emphasizes long-term evolvability</p>
+            <p>It's more appropriate than RPC (ask me what the difference is)</p>
+          </aside>
+        </section>
+
+        <section>
+          Why this presentation?
+          <aside class="notes">
+            <p>The point of this presentation is not to claim that you've been doing things wrong, it's to present patterns which I've found generally useful</p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Properties of RESTful systems:</h2>
+          <ul>
+            <li>Performance</li>
+            <li>Scalability</li>
+            <li>Simplicity</li>
+            <li>Modifiability/Evolvability</li>
+            <li>Visibility</li>
+            <li>Portability</li>
+            <li>Reliability</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Constraints</h2>
+          <ul>
+            <li>Client/Server architecture</li>
+            <li>Statelessness</li>
+            <li>Cacheability</li>
+            <li>Layered System</li>
+            <li>Code on demand (Optional)</li>
+            <li>Uniform Interface</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Provide Links</h2>
+          <section>
+            <p>
+<pre><code class="error">{
+  "items": [
+    {
+      "id": "id1",
+    },
+    {
+      "id": "id2",
+    }
+  ]
+}</code></pre></p>
+          </section>
+          <section>
+            <p><pre><code class="correct">{
+  "items": [
+    {
+      "href": "http://example.com/item/id1",
+    },
+    {
+      "href": "http://example.com/item/id2",
+    }
+  ]
+}</code></pre></p>
+          </section>
+          <aside class="notes">
+            <p>Almost all APIs have some part involving:
+            <ol>
+              <li>Getting a list of things</li>
+              <li>Navigating to the details of the one of the things in the list</li>
+            </ol>
+            The way that clients usually <em>need</em> to do this is:
+            <ol>
+              <li>Grab the id of item to navigate to</li>
+              <li>Expand the id in a <em>known</em> URI template</li>
+              <li>Make a request to the resulting URI</li>
+            </ol>
+            </p>
+            <p>
+            Instead, you can provide a property that has the correctly built URI already, which client can use directly, <em>without having to know your URI structure ahead of time</em>!
+            </p>
+            <p>
+            Exposing only links allows the server to change the URI structure without breaking clients
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Use Hypermedia-enabled media types</h2>
+          <pre><code>{
+  "_links": {
+    "item": [
+      {
+        "href": "http://example.com/item/id1",
+        "name": "id1",
+        "title": "The item"
+      }
+    ]
+  }
+} </pre></code>
+          <aside class="notes">
+            <p>Using standard media types makes clients more general (because links are in standard places), which makes it easier to navigate across separate APIs. In fact, from the client's standpoint, they are the same!</p>
+            <p>This is similar to how the web works</p>
+          </aside>
+        </section>
+
+        <section>
+          <h3>Provide choices</h3>
+          <section>
+            <pre><code>{
+  "stock": 5
+}</code></pre>
+          </section>
+          <section>
+            <pre><code>{
+  "purchaseOptions": [
+    {
+      "productId": "theId",
+      "quantity": 1
+    },
+    {
+      "productId": "theId",
+      "quantity": 2
+    },
+    ...
+    {
+      "productId": "theId",
+      "quantity": 5
+    }
+  ]
+}</code></pre>
+          </section>
+          <aside class="notes">
+            <p>This is kind of the same as links but for response bodies</p>
+            <p>The idea is that, when you have something that defines a choice the client might have to make, you explicitly list those, ideally allowing the client to use it directly</p>
+            <p>Yes, the payload is bigger...but for most APIs it makes no difference and there are mitigations</p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Use sub-resources</h2>
+          <section>
+          <pre>GET /expense/10
+<code>{
+  "description": "Filling up the gas tank",
+  "value": {
+    "amount": 100,
+    "currency": "EUR"
+  },
+  "status": "PENDING_APPROVAL"
+}</code></pre>
+          </section>
+          <section>
+          <pre>PUT /expense/10/approval
+<code>{
+  "approved": true
+}</code></pre>
+          </section>
+          <aside class="notes">
+            <p>Life's too short to implement <code>PATCH</code>...</p>
+            <p>Changes to the sub-resource cause changes to the root resource</p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Use pseudo-resources</h2>
+          <pre>GET /my-profile
+
+...
+
+307 Temporary Redirect
+Location: /profile/287</pre>
+          <aside class="notes">
+            <p>The principle here is the same as links: we provide a pseudo-resource that resolves the actual resource for the client</p>
+            <p>Some examples where this can also be used:
+            <ul>
+              <li>Popping a queue of work items</li>
+              <li>Resources that have multiple unique keys, redirecting to a canonical location improves caching</li>
+              <li>Resources associated with the current authenticated principal</li>
+            </ul>
+            </p>
+            <p>One thing to note is that, if you're using links, this example might not make sense because you might be able to populate the link directly</p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Don't be (too) picky with inputs</h2>
+          Redirect instead
+          <pre>GET /item
+<em>or</em>
+GET /item?pageSize=9000
+
+...
+
+303 See Other
+Location: /item?pageSize=100
+<code>{
+  "pageSize": 100
+}</code></pre>
+          <aside class="notes">
+            <p>If I ask you for more items than you'd like to give, don't return <code>400 Bad Request</code>, try to redirect me to something useful instead.</p>
+            <p>When the query params come from user defined-values, the response should include a description of what the now values are</p>
+            <p>This also works for time ranges or for values with too much granularity</p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Don't trust client input</h2>
+          <pre>POST /cart<code>{
+  "productId": "id1",
+  "price": {
+    "amount": 100,
+    "currency": "EUR"
+  }
+}</code></pre>
+
+          <aside class="notes">
+            <p>So... what's wrong here?
+              This might seem like a pretty obvious mistake...
+              But I've seen production code that accepted this.
+              The reality is that some cases are more subtle (expand on blacklist case)
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <h2>Use Caching</h2>
+          <aside class="notes">
+            <p>
+            HTTP caching is one of my favorite performance tweaks.
+            In my opinion, it's superior to other caching schemes (like memcached) because:
+            <ul>
+              <li>Can be almost trivially added after the fact (just drop the cache in front of your API)</li>
+              <li>Some caching patterns allow serving from cache <em>without the request ever hitting your service</em></li>
+              <li>Supports "if not modified" caching workflows</li>
+            </ul>
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          Questions?
+        </section>
+
 			</div>
 		</div>
 
