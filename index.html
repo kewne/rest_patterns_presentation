@@ -95,19 +95,6 @@
     }
   ]
 }</code></pre></p>
-          </section>
-          <section>
-            <p><pre><code class="correct">{
-  "items": [
-    {
-      "href": "http://example.com/item/id1",
-    },
-    {
-      "href": "http://example.com/item/id2",
-    }
-  ]
-}</code></pre></p>
-          </section>
           <aside class="notes">
             <p>Almost all APIs have some part involving:
             <ol>
@@ -121,6 +108,20 @@
               <li>Make a request to the resulting URI</li>
             </ol>
             </p>
+          </aside>
+          </section>
+          <section>
+            <p><pre><code class="correct">{
+  "items": [
+    {
+      "href": "http://example.com/item/id1",
+    },
+    {
+      "href": "http://example.com/item/id2",
+    }
+  ]
+}</code></pre></p>
+          <aside class="notes">
             <p>
             Instead, you can provide a property that has the correctly built URI already, which client can use directly, <em>without having to know your URI structure ahead of time</em>!
             </p>
@@ -128,6 +129,7 @@
             Exposing only links allows the server to change the URI structure without breaking clients
             </p>
           </aside>
+          </section>
         </section>
 
         <section>
@@ -155,6 +157,10 @@
             <pre><code>{
   "stock": 5
 }</code></pre>
+          <aside class="notes">
+            <p>This is kind of the same as links but for response bodies</p>
+            <p>The idea is that, when you have something that defines a choice the client might have to make, you explicitly list those, ideally allowing the client to use it directly</p>
+          </aside>
           </section>
           <section>
             <pre><code>{
@@ -174,12 +180,10 @@
     }
   ]
 }</code></pre>
-          </section>
           <aside class="notes">
-            <p>This is kind of the same as links but for response bodies</p>
-            <p>The idea is that, when you have something that defines a choice the client might have to make, you explicitly list those, ideally allowing the client to use it directly</p>
             <p>Yes, the payload is bigger...but for most APIs it makes no difference and there are mitigations</p>
           </aside>
+          </section>
         </section>
 
         <section>
@@ -194,17 +198,21 @@
   },
   "status": "PENDING_APPROVAL"
 }</code></pre>
+          <aside class="notes">
+            <p>In this case, you want someone to approve the expense, so it can move to the next step in the workflow.</p>
+            <p>Life's too short to implement <code>PATCH</code>...</p>
+          </aside>
           </section>
           <section>
           <pre>PUT /expense/10/approval
 <code>{
   "approved": true
 }</code></pre>
-          </section>
           <aside class="notes">
-            <p>Life's too short to implement <code>PATCH</code>...</p>
+            <p>You create a new resource that can is easy to change entirely at once.</p>
             <p>Changes to the sub-resource cause changes to the root resource</p>
           </aside>
+          </section>
         </section>
 
         <section>
